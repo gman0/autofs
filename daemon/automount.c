@@ -88,6 +88,8 @@ long global_negative_timeout = -1;
 long global_positive_timeout = -1;
 int do_force_unlink = 0;		/* Forceably unlink mount tree at startup */
 
+int do_skip_unmount_at_exit = 0;    /* Do not unmount autofs and its nested mounts at exit */
+
 static int start_pipefd[2] = {-1, -1};
 static int st_stat = 1;
 static int *pst_stat = &st_stat;
@@ -749,9 +751,10 @@ static int umount_autofs(struct autofs_point *ap)
 	if (ap->state == ST_INIT)
 		return -1;
 
-	if ((ap->flags & DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT)
-			== DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT) {
-		info(ap->logopt, "Skipping unmounts at exit because daemon is running with -x flag");
+    warn(ap->logopt, "=== umount_autofs ===");
+
+	if (do_skip_unmount_at_exit) {
+		warn(ap->logopt, "Skipping unmounts at exit because daemon is running with -x flag");
 		return 0;
 	}
 
@@ -2248,7 +2251,7 @@ int main(int argc, char *argv[])
 	time_t age = monotonic_time(NULL);
 	struct rlimit rlim;
 	unsigned long max_open_files;
-	const char *options = "+hp:t:vmd::D:SfVrO:l:n:P:CFUM:";
+	const char *options = "+hxp:t:vmd::D:SfVrO:l:n:P:CFUM:";
 	static const struct option long_options[] = {
 		{"help", 0, 0, 'h'},
 		{"skip-unmount-at-exit", 0, 0, 'x'},
@@ -2310,6 +2313,7 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'x':
 			flags |= DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT;
+			do_skip_unmount_at_exit = 1;
 		    break;
 
 		case 'h':
