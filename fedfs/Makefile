@@ -16,6 +16,10 @@ fedfs-map-nfs4_OBJ = fedfs-map-nfs4.o
 
 version := $(shell cat ../.version)
 
+# XXX
+LIBS += -ltirpc
+CFLAGS += -I/usr/include/tirpc
+
 CFLAGS += -rdynamic $(DAEMON_CFLAGS) -D_GNU_SOURCE -I../include
 CFLAGS += -DVERSION_STRING=\"$(version)\"
 LDFLAGS += -rdynamic

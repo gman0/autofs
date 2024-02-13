@@ -19,6 +19,10 @@ MODS :=	lookup_file.so lookup_program.so lookup_userhome.so \
 
 YACCSRC = amd_tok.c amd_parse.tab.c amd_parse.tab.h
 
+# XXX
+LIBS += -ltirpc
+CFLAGS += -I/usr/include/tirpc
+
 ifeq ($(EXT2FS), 1)
   SRCS += mount_ext2.c
   MODS += mount_ext2.so

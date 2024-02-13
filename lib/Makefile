@@ -16,6 +16,10 @@ YACCSRC = nss_tok.c nss_parse.tab.c nss_parse.tab.h
 
 LIB = libautofs.so
 
+# XXX
+LIBS += -ltirpc
+CFLAGS += -I/usr/include/tirpc
+
 CFLAGS += -I../include -fPIC -D_GNU_SOURCE
 CFLAGS += -DAUTOFS_MAP_DIR=\"$(autofsmapdir)\"
 CFLAGS += -DAUTOFS_CONF_DIR=\"$(autofsconfdir)\"

@@ -25,6 +25,10 @@ CFLAGS += -DVERSION_STRING=\"$(version)\"
 LDFLAGS += -rdynamic
 LIBS += -ldl -lpthread
 
+# XXX
+LIBS += -ltirpc
+CFLAGS += -I/usr/include/tirpc
+
 ifeq ($(SYSTEMD), 1)
     CFLAGS += -DWITH_SYSTEMD
     LIBS += $(LIBSYSTEMD)
