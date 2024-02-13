@@ -77,6 +77,7 @@ char *autofs_strerror_r(int errnum, char *buf, size_t buflen);  /* GNU */
 #define DAEMON_FLAGS_GHOST			0x0008
 #define DAEMON_FLAGS_CHECK_DAEMON		0x0010
 #define DAEMON_FLAGS_DUMP_MAPS			0x0020
+#define DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT	0x0040
 
 #define AUTOFS_SUPER_MAGIC 0x00000187L
 #define SMB_SUPER_MAGIC    0x0000517BL

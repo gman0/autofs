@@ -749,6 +749,12 @@ static int umount_autofs(struct autofs_point *ap)
 	if (ap->state == ST_INIT)
 		return -1;
 
+	if ((ap->flags & DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT)
+			== DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT) {
+		info(ap->logopt, "Skipping unmounts at exit because daemon is running with -x flag");
+		return 0;
+	}
+
 	if (ap->type == LKP_INDIRECT) {
 		umount_all(ap);
 		ret = umount_autofs_indirect(ap);
@@ -2245,6 +2251,7 @@ int main(int argc, char *argv[])
 	const char *options = "+hp:t:vmd::D:SfVrO:l:n:P:CFUM:";
 	static const struct option long_options[] = {
 		{"help", 0, 0, 'h'},
+		{"skip-unmount-at-exit", 0, 0, 'x'},
 		{"pid-file", 1, 0, 'p'},
 		{"timeout", 1, 0, 't'},
 		{"verbose", 0, 0, 'v'},
@@ -2301,6 +2308,10 @@ int main(int argc, char *argv[])
 	opterr = 0;
 	while ((opt = getopt_long(argc, argv, options, long_options, NULL)) != EOF) {
 		switch (opt) {
+		case 'x':
+			flags |= DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT;
+		    break;
+
 		case 'h':
 			usage();
 			exit(0);
