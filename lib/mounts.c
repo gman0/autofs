@@ -3003,6 +3003,50 @@ static void set_offset_tree_catatonic(struct autofs_point *ap, struct mapent *me
 	tree_traverse_inorder(MAPENT_ROOT(me), set_offset_tree_catatonic_work, NULL);
 }
 
+void set_all_catatonic(struct autofs_point *ap)
+{
+	struct master_mapent *entry = ap->entry;
+	struct map_source *map;
+	struct mapent_cache *mc;
+	struct mapent *me;
+
+	if (!is_mounted(ap->path, MNTS_AUTOFS)) {
+		return;
+	}
+
+	map = entry->maps;
+	while (map) {
+		mc = map->mc;
+		cache_readlock(mc);
+		me = cache_enumerate(mc, NULL);
+		while (me) {
+			/* Skip negative map entries and wildcard entries */
+			if (!me->mapent)
+				goto next;
+
+			if (!strcmp(me->key, "*"))
+				goto next;
+
+			/* Only need to set offset mounts catatonic */
+			if (IS_MM(me) && IS_MM_ROOT(me)) {
+				set_offset_tree_catatonic(ap, me);
+			}
+
+next:
+			me = cache_enumerate(mc, me);
+		}
+		cache_unlock(mc);
+		map = map->next;
+	}
+
+	/* By the time this function is called ap->ioctlfd will have
+	 * been closed so don't try and use it.
+	 */
+	set_mount_catatonic(ap, NULL, -1);
+
+	return;
+}
+
 void set_indirect_mount_tree_catatonic(struct autofs_point *ap)
 {
 	struct master_mapent *entry = ap->entry;

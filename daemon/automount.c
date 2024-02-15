@@ -751,13 +751,6 @@ static int umount_autofs(struct autofs_point *ap)
 	if (ap->state == ST_INIT)
 		return -1;
 
-    warn(ap->logopt, "=== umount_autofs ===");
-
-	if (do_skip_unmount_at_exit) {
-		warn(ap->logopt, "Skipping unmounts at exit because daemon is running with -x flag");
-		return 0;
-	}
-
 	if (ap->type == LKP_INDIRECT) {
 		umount_all(ap);
 		ret = umount_autofs_indirect(ap);
@@ -1851,6 +1844,24 @@ int handle_mounts_exit(struct autofs_point *ap)
 	st_remove_tasks(ap);
 	st_wait_task(ap, ST_ANY, 0);
 
+	if (do_skip_unmount_at_exit) {
+		warn(ap->logopt, "Skipping unmounts at exit because daemon is running with --skip-unmount-at-exit flag");
+
+		/* Set all mounts catatonic. The expectation is to restart and reconnect. */
+
+		warn(ap->logopt, "Setting all mounts to catatonic");
+
+		set_all_catatonic(ap);
+
+		// conditional_alarm_add(ap, ap->exp_runfreq);
+		// st_add_task(ap, ST_READY);
+		// master_source_unlock(ap->entry);
+		// master_mutex_unlock();
+		// pthread_setcancelstate(cur_state, NULL);
+
+		return 1;
+	}
+
 	/*
 	 * For a direct mount map all mounts have already gone
 	 * by the time we get here and since we only ever
@@ -2493,6 +2504,24 @@ int main(int argc, char *argv[])
 
 	/* Get processor information for predefined escapes */
 	macro_init();
+
+	if (flags & DAEMON_FLAGS_SKIP_UNMOUNT_AT_EXIT) {
+		/* Certain flag	combinations with --skip-unmount-at-exit
+		 * don't make sense. Refuse	such cases and exit	with error.
+		 */
+
+		if (flags &	DAEMON_FLAGS_DUMP_MAPS)	{
+			logerr("Cannot run with	--skip-unmount-at-exit and --dumpmaps - exiting");
+			macro_free_global_table();
+			exit(1);
+		}
+
+		if (do_force_unlink	== UNLINK_AND_EXIT)	{
+			logerr("Cannot run with	--skip-unmount-at-exit and --force-exit - exiting");
+			macro_free_global_table();
+			exit(1);
+		}
+	}
 
 	if (flags & DAEMON_FLAGS_DUMP_MAPS) {
 		struct master_mapent *entry;
