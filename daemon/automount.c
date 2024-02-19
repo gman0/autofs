@@ -1853,11 +1853,18 @@ int handle_mounts_exit(struct autofs_point *ap)
 
 		set_all_catatonic(ap);
 
-		// conditional_alarm_add(ap, ap->exp_runfreq);
-		// st_add_task(ap, ST_READY);
-		// master_source_unlock(ap->entry);
-		// master_mutex_unlock();
-		// pthread_setcancelstate(cur_state, NULL);
+		int	pending	= 0;
+
+		if (!list_empty(&master_list->completed))
+			pending	= 1;
+
+		master_remove_mapent(ap->entry);
+		master_source_unlock(ap->entry);
+
+		if (!pending)
+			pthread_kill(signal_handler_thid, SIGTERM);
+
+		master_mutex_unlock();
 
 		return 1;
 	}
